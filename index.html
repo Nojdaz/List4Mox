@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>List4Mox</title>
+  </head>
+  <body>
+    <script>
+      const APIroot = "https://api.scryfall.com/cards/";
+      var rownum = 1;
+      var cardlist = [];
+
+      async function newcard(index) {
+        const set = document.getElementById("set" + index).value.toLowerCase();
+        const cn = document.getElementById("cn" + index).value;
+
+        if (!valuecheck(cn, set, index)) {
+          return false;
+        }
+        if (rownum - index <= 1) {
+          createtablerow();
+        }
+        const card = await getcard(cn, set);
+        if (!card) {
+          returnResult("❌ Card not found", index);
+        } else {
+          returnResult(card.name, index);
+          changeList(createListLine(card, index), index);
+        }
+      }
+
+      function valuecheck(cn, set, index) {
+        if (isNaN(cn)) {
+          console.log("invalid collector number: " + cn + " at row:" + index);
+          returnResult("❌ Invalid collector number", index);
+          return false;
+        } else if (set == "") {
+          return false;
+        }
+        return true;
+      }
+
+      async function getcard(cn, set) {
+        try {
+          const response = await fetch(APIroot + set + "/" + cn);
+          if (!response.ok) {
+            console.log("Request failed with status: " + response.status);
+            return false;
+          }
+          return await response.json();
+        } catch (error) {
+          console.error("Error:", error);
+          throw error;
+        }
+      }
+      function createListLine(response) {
+        moxdata =
+          "1 " +
+          response.name +
+          " (" +
+          response.set +
+          ") " +
+          response.collector_number;
+        console.log("added line: " + moxdata);
+        return moxdata;
+      }
+      function changeList(string, index) {
+        cardlist[index] = string;
+      }
+
+      function createtablerow() {
+        rownum++;
+        const cnCell = document.createElement("td");
+        const cnInput = document.createElement("input");
+        cnInput.setAttribute("id", "cn" + rownum);
+        cnInput.setAttribute("onBlur", "newcard(" + rownum + ")");
+
+        cnCell.appendChild(cnInput);
+
+        const setCell = document.createElement("td");
+        const setInput = document.createElement("input");
+        setInput.setAttribute("id", "set" + rownum);
+        setInput.setAttribute("onBlur", "newcard(" + rownum + ")");
+        setCell.appendChild(setInput);
+
+        const resultCell = document.createElement("td");
+        const resultField = document.createElement("a");
+        resultField.setAttribute("id", "result" + rownum);
+        resultCell.appendChild(resultField);
+
+        const row = document.createElement("tr");
+        row.setAttribute("id", rownum);
+        row.appendChild(cnCell);
+        row.appendChild(setCell);
+        row.appendChild(resultCell);
+
+        const table = document.getElementById("cardTableBody");
+        table.appendChild(row);
+      }
+
+      function returnResult(cardname, index) {
+        console.log(index);
+        var result = document.getElementById("result" + index);
+        result.innerText = cardname;
+      }
+
+      function printList() {
+        console.log("creating list...");
+        console.log(cardlist[1]);
+        var listField = document.getElementById("moxlist");
+        listField.value = cardlist
+          .toString()
+          .split(/,(?=\d)/)
+          .join("\n");
+      }
+    </script>
+    <h1>List4Mox</h1>
+    <table id="cardtable">
+      <thead>
+        <tr>
+          <th>Collector number</th>
+          <th>Set Code</th>
+          <th>Card Name</th>
+        </tr>
+      </thead>
+      <tbody id="cardTableBody">
+        <tr id="0">
+          <td>
+            <input id="cn0" placeholder="example: 265" onblur="newcard(0)" />
+          </td>
+          <td>
+            <input id="set0" onblur="newcard(0)" placeholder="example: RVR" />
+          </td>
+          <td><a id="result0"></a></td>
+        </tr>
+        <tr id="1">
+          <td>
+            <input id="cn1" onblur="newcard(1)" />
+          </td>
+          <td>
+            <input id="set1" onblur="newcard(1)" />
+          </td>
+          <td><a id="result1"></a></td>
+        </tr>
+      </tbody>
+    </table>
+    <button id="generatelist" onclick="printList()">Generate List</button>
+    <div>
+      <textarea
+        id="moxlist"
+        name="moxlist"
+        cols="40"
+        placeholder="<-Your list will be generated here ->"
+      ></textarea>
+    </div>
+  </body>
+</html>
