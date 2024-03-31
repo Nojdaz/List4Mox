@@ -7,45 +7,49 @@
   </head>
   <body>
     <script>
-      const APIroot = "https://api.scryfall.com/cards/";
-      var rownum = 1;
-      var cardlist = [];
+      const ApiRoot = "https://api.scryfall.com/cards/";
+      var rowNum = 1;
+      var cardList = [];
+      async function newCard(index) {
+        const set = document.getElementById(`set${index}`).value.toLowerCase();
+        const cn = document
+          .getElementById(`cn${index}`)
+          .value.replace(/^0+/, "");
 
-      async function newcard(index) {
-        const set = document.getElementById("set" + index).value.toLowerCase();
-        const cn = document.getElementById("cn" + index).value;
-
-        if (!valuecheck(cn, set, index)) {
+        if (!valueCheck(cn, set, index)) {
           return false;
         }
-        if (rownum - index <= 1) {
-          createtablerow();
+        if (rowNum - index <= 1) {
+          createTableRow();
         }
-        const card = await getcard(cn, set);
+        const card = await getCard(cn, set);
         if (!card) {
           returnResult("❌ Card not found", index);
         } else {
           returnResult(card.name, index);
+          if (document.getElementById(index).childElementCount <= 3) {
+            extraParams(index, card);
+          }
           changeList(createListLine(card, index), index);
         }
       }
 
-      function valuecheck(cn, set, index) {
-        if (isNaN(cn)) {
-          console.log("invalid collector number: " + cn + " at row:" + index);
-          returnResult("❌ Invalid collector number", index);
+      function valueCheck(cn, set, index) {
+        if (set == "" || cn == "") {
+          returnResult("", index);
           return false;
-        } else if (set == "") {
+        } else if (isNaN(cn) && !/^(\d*[sp])$/.test(cn)) {
+          returnResult("❌ Invalid collector number", index);
           return false;
         }
         return true;
       }
 
-      async function getcard(cn, set) {
+      async function getCard(cn, set) {
         try {
-          const response = await fetch(APIroot + set + "/" + cn);
+          const response = await fetch(`${ApiRoot}${set}/${cn}`);
           if (!response.ok) {
-            console.log("Request failed with status: " + response.status);
+            console.log(`Request failed with status:${response.status}`);
             return false;
           }
           return await response.json();
@@ -54,43 +58,54 @@
           throw error;
         }
       }
-      function createListLine(response) {
-        moxdata =
-          "1 " +
-          response.name +
-          " (" +
-          response.set +
-          ") " +
-          response.collector_number;
-        console.log("added line: " + moxdata);
+      function createListLine(card, index) {
+        var foil = "";
+        try {
+          if (document.getElementById(`foil${index}`).checked) {
+            foil = "*F*";
+          }
+        } catch {}
+        moxdata = `1 ${card.name} (${card.set.toUpperCase()}) ${
+          card.collector_number
+        } ${foil}`;
         return moxdata;
       }
+
       function changeList(string, index) {
-        cardlist[index] = string;
+        cardList[index] = string;
       }
 
-      function createtablerow() {
-        rownum++;
+      function changeFoil(index) {
+        if (document.getElementById(`foil${index}`).checked) {
+          cardList[index] += "*F*";
+        } else {
+          cardList[index] = cardList[index].replace("*F*", "");
+        }
+      }
+
+      function createTableRow() {
+        rowNum++;
         const cnCell = document.createElement("td");
         const cnInput = document.createElement("input");
-        cnInput.setAttribute("id", "cn" + rownum);
-        cnInput.setAttribute("onBlur", "newcard(" + rownum + ")");
+        cnInput.setAttribute("id", `cn${rowNum}`);
+        cnInput.setAttribute("onBlur", `newCard(${rowNum})`);
 
         cnCell.appendChild(cnInput);
 
         const setCell = document.createElement("td");
         const setInput = document.createElement("input");
-        setInput.setAttribute("id", "set" + rownum);
-        setInput.setAttribute("onBlur", "newcard(" + rownum + ")");
+        setInput.setAttribute("id", `set${rowNum}`);
+        setInput.setAttribute("onBlur", `newCard(${rowNum})`);
+
         setCell.appendChild(setInput);
 
         const resultCell = document.createElement("td");
         const resultField = document.createElement("a");
-        resultField.setAttribute("id", "result" + rownum);
+        resultField.setAttribute("id", `result${rowNum}`);
         resultCell.appendChild(resultField);
 
         const row = document.createElement("tr");
-        row.setAttribute("id", rownum);
+        row.setAttribute("id", rowNum);
         row.appendChild(cnCell);
         row.appendChild(setCell);
         row.appendChild(resultCell);
@@ -100,46 +115,66 @@
       }
 
       function returnResult(cardname, index) {
-        console.log(index);
-        var result = document.getElementById("result" + index);
+        var result = document.getElementById(`result${index}`);
         result.innerText = cardname;
       }
 
+      function extraParams(index, card) {
+        const foilCell = document.createElement("td");
+        const foilInput = document.createElement("input");
+        foilInput.setAttribute("type", "checkbox");
+        foilInput.setAttribute("id", `foil${index}`);
+        foilInput.setAttribute("onclick", `changeFoil(${index})`);
+        foilInput.disabled = !card.foil;
+        foilInput.checked = !card.nonfoil;
+        foilCell.appendChild(foilInput);
+
+        const row = document.getElementById(index);
+        row.appendChild(foilCell);
+      }
+
       function printList() {
-        console.log("creating list...");
-        console.log(cardlist[1]);
         var listField = document.getElementById("moxlist");
-        listField.value = cardlist
+        listField.value = cardList
           .toString()
           .split(/,(?=\d)/)
           .join("\n");
       }
     </script>
     <h1>List4Mox</h1>
+    <p>
+      Welcome, this site will assist you digitize physical Magic cards for
+      import to <a href="https://www.moxfield.com">Moxfield</a>. Most cards will
+      have a Collector Number and Set Code in the bottom left corner of each
+      card. Use this information to fetch the right card with the right art. A
+      foil checkbox will appear when a card is entered. Protip: Use the "Tab"
+      key for navigating the inputfields
+    </p>
     <table id="cardtable">
       <thead>
         <tr>
-          <th>Collector number</th>
+          <th>Collector Number</th>
           <th>Set Code</th>
           <th>Card Name</th>
+          <th>Foil</th>
         </tr>
       </thead>
       <tbody id="cardTableBody">
         <tr id="0">
           <td>
-            <input id="cn0" placeholder="example: 265" onblur="newcard(0)" />
+            <input id="cn0" placeholder="example: 265" onblur="newCard(0)" />
           </td>
           <td>
-            <input id="set0" onblur="newcard(0)" placeholder="example: RVR" />
+            <input id="set0" onblur="newCard(0)" placeholder="example: RVR" />
           </td>
           <td><a id="result0"></a></td>
         </tr>
         <tr id="1">
           <td>
-            <input id="cn1" onblur="newcard(1)" />
+            <input id="cn1" onblur="newCard(1)" />
           </td>
           <td>
-            <input id="set1" onblur="newcard(1)" />
+            <input id="set1" onblur="newCard(1)" />
           </td>
           <td><a id="result1"></a></td>
         </tr>
@@ -149,10 +184,18 @@
     <div>
       <textarea
         id="moxlist"
-        name="moxlist"
         cols="40"
         placeholder="<-Your list will be generated here ->"
       ></textarea>
     </div>
+    <footer>
+      <p>
+        Author: David Fagerström<br />
+        This project can be found on
+        <a href="https://github.com/Nojdaz/List4Mox"> Github</a><br />
+        Have feedback on the site? Submit an email at:
+        <a href="mailto:david@fagerstrom.org">david@fagerstrom.org</a><br />
+      </p>
+    </footer>
   </body>
 </html>
