@@ -14,6 +14,11 @@ Ready your cards and type away, You'll find the "Collector Number" and "Set Numb
 
 ![Example image of a Magic: The Gathering card showing the "Collector Number" and "Set Number" location in the bottom left corner.](https://arkiv.fagerstrom.org/api/public/dl/lzvEUNC_?inline=true)
 
+## Settings
+
+To ease the list creation process there exists a option to set a deafult value for the setcode and a "always foil" toggle
+If your not a fan of the TAB/Type input method there also exists a puretext option. This will grant you a more open unconstricted space to type away.
+
 ## Acknowledgements
 
 List4Mox relies on the card data provided by the [scryfall](https://scryfall.com/) api. Scryfall is a powerful and comprehensive Magic: The Gathering card database and API that provides accurate and up-to-date information about Magic cards.
