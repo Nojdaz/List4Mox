@@ -8,7 +8,7 @@
   <body onload="initilize()">
     <script>
       const ApiRoot = "https://api.scryfall.com/cards/";
-      var rowNum = 1;
+      var rowNum = 2;
       var cardList = [];
       var showsettings = false
       var alwaysFoil = false
@@ -81,7 +81,7 @@
           .value.replace(/^0+/, "");
 
         if(cn != null && cn != "" && set != null && set != ""){
-          if (rowNum - index <= 1) {
+          if (document.getElementById('cardTableBody').rows.length - index <= 2) {
             createTableRow();
           }
           isfoil = foil != null && foil != "" && foil ? true : false
@@ -123,7 +123,6 @@
       }
 
       function createTableRow(cn, set) {
-        rowNum++;
         const cnCell = document.createElement("td");
         const cnInput = document.createElement("input");
         cnInput.setAttribute("id", `cn${rowNum}`);
@@ -154,6 +153,7 @@
 
         const table = document.getElementById("cardTableBody");
         table.appendChild(row);
+        rowNum++;
       }
 
       function returnResult(cardname, index) {
@@ -194,7 +194,7 @@
         cardList = [];
         var puretextContent = document.getElementById("puretext").value.trim().split("\n")
         document.getElementById("cardTableBody").innerHTML = ''
-        rowNum = -1
+        rowNum = 0
         puretextContent.forEach(card => {
           var cardinfo = card.trim().replace("\n", '').split(" ")
           var foil = cardinfo[2] != null && cardinfo[2].trim() == "F" ? true : false
@@ -345,3 +345,6 @@
     </footer>
   </body>
 </html>
+
+Andra list format
+default set code sätts 
