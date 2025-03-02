@@ -5,100 +5,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>List4Mox</title>
   </head>
+
   <body onload="initilize()">
     <script>
       const ApiRoot = "https://api.scryfall.com/cards/";
       var rowNum = 2;
       var cardList = [];
-      var showsettings = false
-      var alwaysFoil = false
-      var listField
+      var showsettings = false;
+      var alwaysFoil = false;
+      var listField;
+
+      window.addEventListener("beforeunload", function (event) {
+        event.preventDefault();
+      });
 
       function initilize() {
         listField = document.getElementById("moxlist");
       }
 
-      function showSettings(){
-        if(showsettings){
-          showsettings = false
-          document.getElementById("settings").setAttribute('hidden','')
+      function showSettings() {
+        if (showsettings) {
+          showsettings = false;
+          document.getElementById("settings").setAttribute("hidden", "");
         } else {
-          showsettings = true
-          document.getElementById("settings").removeAttribute('hidden')
+          showsettings = true;
+          document.getElementById("settings").removeAttribute("hidden");
         }
       }
 
-      function setSetcode(){
+      function setSetcode() {
         const inputs = document.querySelectorAll('input[id^="set"]');
         inputs.forEach((input, index) => {
-            if (input.value.trim() === "") {
-                input.value = setCodeSetting();
-            }
+          if (input.value.trim() === "") {
+            input.value = setCodeSetting();
+          }
         });
       }
 
-      function locksetcode(){
+      function locksetcode() {
         const inputs = document.querySelectorAll('input[id^="set"]');
         inputs.forEach((input, index) => {
-            input.disabled = islocksetcode()
+          input.disabled = islocksetcode();
         });
       }
 
-      function showPuretext(){
-      var puretextField = document.getElementById('puretext')
-      var cardtable = document.getElementById('cardtable')
-       if(window.getComputedStyle(puretextField).display === "none"){
-        puretextField.style.display = "block"
-        cardtable.style.display = "none"
-        convertToPureText();
-       } else {
-        puretextField.style.display = "none"
-        cardtable.style.display = "table"
-        covertToTable();
-       }
+      function showPuretext() {
+        var puretextField = document.getElementById("puretext");
+        var cardtable = document.getElementById("cardtable");
+        if (window.getComputedStyle(puretextField).display === "none") {
+          puretextField.style.display = "block";
+          cardtable.style.display = "none";
+          convertToPureText();
+        } else {
+          puretextField.style.display = "none";
+          cardtable.style.display = "table";
+          covertToTable();
+        }
       }
 
-
-      function setCodeSetting(){
-        return document.getElementById('alwaysCode').value 
+      function setCodeSetting() {
+        return document.getElementById("alwaysCode").value;
       }
 
-      function foilSetting(){
-        return document.getElementById('alwaysFoil').checked
+      function foilSetting() {
+        return document.getElementById("alwaysFoil").checked;
       }
 
-      function inputSetting(){
-        return document.getElementById('pureTextSetting').checked
+      function inputSetting() {
+        return document.getElementById("pureTextSetting").checked;
       }
-      function islocksetcode(){
-        return document.getElementById('codeLock').checked
+      function islocksetcode() {
+        return document.getElementById("codeLock").checked;
       }
 
       async function newCard(index, foil) {
         const set = document.getElementById(`set${index}`).value.toLowerCase();
-        const cn = document
-          .getElementById(`cn${index}`)
-          .value.replace(/^0+/, "");
+        const cn = document.getElementById(`cn${index}`).value.replace(/^0+/, "");
 
-        if(cn != null && cn != "" && set != null && set != ""){
-          if (document.getElementById('cardTableBody').rows.length - index <= 2) {
+        if (cn != null && cn != "" && set != null && set != "") {
+          if (document.getElementById("cardTableBody").rows.length - index <= 2) {
             createTableRow();
           }
-          isfoil = foil != null && foil != "" && foil ? true : false
+          isfoil = foil != null && foil != "" && foil ? true : false;
           getCard(cn, set, index, isfoil, 1, tablecallback);
-       }
+        }
       }
 
       async function getCard(cn, set, index, isfoil, qty, callback) {
-        try {
-          const response = await fetch(`${ApiRoot}${set}/${cn}`);
-          return callback(await response.ok ? await response.json() : response.ok, index, isfoil, qty, cn, set);
-        } catch (error) {
-          console.error("Error:", error);
-          throw error;
+        if (cn && set) {
+          try {
+            const response = await fetch(`${ApiRoot}${set}/${cn}`);
+            return callback(
+              (await response.ok) ? await response.json() : response.ok,
+              index,
+              isfoil,
+              qty,
+              cn,
+              set
+            );
+          } catch (error) {
+            console.error("Error:", error);
+            throw error;
+          }
         }
       }
-      
+
       function createListLine(card, index) {
         var foil = "";
         if (document.getElementById(`foil${index}`).checked) {
@@ -127,7 +138,7 @@
         const cnInput = document.createElement("input");
         cnInput.setAttribute("id", `cn${rowNum}`);
         cnInput.setAttribute("onBlur", `newCard(${rowNum})`);
-        cn ? cnInput.value = cn : cnInput.value = ""
+        cn ? (cnInput.value = cn) : (cnInput.value = "");
 
         cnCell.appendChild(cnInput);
 
@@ -135,8 +146,8 @@
         const setInput = document.createElement("input");
         setInput.setAttribute("id", `set${rowNum}`);
         setInput.setAttribute("onBlur", `newCard(${rowNum})`);
-        
-        set ? setInput.value = set : setInput.value = setCodeSetting()
+
+        set ? (setInput.value = set) : (setInput.value = setCodeSetting());
         setInput.disabled = islocksetcode();
         setCell.appendChild(setInput);
 
@@ -168,21 +179,21 @@
         foilInput.setAttribute("id", `foil${index}`);
         foilInput.setAttribute("onclick", `changeFoil(${index})`);
         foilInput.disabled = !card.foil;
-        foilInput.checked = !card.nonfoil || card.foil && foilSetting() || inputfoil;
+        foilInput.checked = !card.nonfoil || (card.foil && foilSetting()) || inputfoil;
         foilCell.appendChild(foilInput);
 
         const row = document.getElementById(index);
         row.appendChild(foilCell);
       }
 
-      function convertToPureText(){
-        var puretextContent = document.getElementById("puretext")
-        var table = document.getElementById("cardTableBody")
-        puretextContent.value = ""
+      function convertToPureText() {
+        var puretextContent = document.getElementById("puretext");
+        var table = document.getElementById("cardTableBody");
+        puretextContent.value = "";
         for (const row of table.rows) {
           const cn = row.cells[0]?.querySelector("input")?.value;
           const setcode = row.cells[1]?.querySelector("input")?.value;
-          const foil = row.cells[3]?.querySelector("input")?.checked ? "F" : ""
+          const foil = row.cells[3]?.querySelector("input")?.checked ? "F" : "";
 
           if (cn && setcode) {
             puretextContent.value += `${cn} ${setcode} ${foil}\n`;
@@ -190,21 +201,24 @@
         }
       }
 
-      function covertToTable(){
+      function covertToTable() {
         cardList = [];
-        var puretextContent = document.getElementById("puretext").value.trim().split("\n")
-        document.getElementById("cardTableBody").innerHTML = ''
-        rowNum = 0
-        puretextContent.forEach(card => {
-          var cardinfo = card.trim().replace("\n", '').split(" ")
-          var foil = cardinfo[2] != null && cardinfo[2].trim() == "F" ? true : false
-          createTableRow(cardinfo[0],cardinfo[1])
+        var puretextContent = document
+          .getElementById("puretext")
+          .value.trim()
+          .split("\n");
+        document.getElementById("cardTableBody").innerHTML = "";
+        rowNum = 0;
+        puretextContent.forEach((card) => {
+          var cardinfo = card.trim().replace("\n", "").split(" ");
+          var foil = cardinfo[2] != null && cardinfo[2].trim() == "F" ? true : false;
           getCard(cardinfo[0], cardinfo[1], rowNum, foil, 1, tablecallback);
-        })
+          createTableRow(cardinfo[0], cardinfo[1]);
+        });
         createTableRow();
       }
 
-      function tablecallback(result,index,isfoil) {
+      function tablecallback(result, index, isfoil) {
         if (!result) {
           returnResult("❌ Card not found", index);
         } else {
@@ -216,79 +230,130 @@
         }
       }
 
-      function puretextcallback(result, index, isfoil, qty,cn, set){ 
-          if (!result) {
-            listField.value += `❌ Error on row ${rowNum} Card with Collector number: \"${cn}\" and Set code: \"${set}\" could not be found \n`
-          } else {
-            var quantity
-            qty != null || qty == "" ? quantity = qty : quantity = 1
-            var foil
-            isfoil ? foil = "*F*" : foil = ""
-            var row = `${quantity} ${result.name} (${result.set.toUpperCase()}) ${result.collector_number} ${foil}\n`
-            listField.value += row;
-          }}
-      
-      async function puretextlist(){
-        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-        var rowNum = 0
-        var cards = document.getElementById('puretext').value.trim().split("\n")
-        for (const card of cards) {
-          rowNum ++;
-          var details = card.split(" ")
-          var foil = details[2] == "F" ?  foil = true : foil = false
-          var searchcard = getCard(details[0], details[1], rowNum, foil, 1, puretextcallback);
-          await delay(50);
+      function puretextcallback(result, index, isfoil, qty, cn, set) {
+        if (!result) {
+          listField.value += `❌ Error on row ${rowNum} Card with Collector number: \"${cn}\" and Set code: \"${set}\" could not be found \n`;
+        } else {
+          var quantity;
+          qty != null || qty == "" ? (quantity = qty) : (quantity = 1);
+          var foil;
+          isfoil ? (foil = "*F*") : (foil = "");
+          var row = `${quantity} ${result.name} (${result.set.toUpperCase()}) ${
+            result.collector_number
+          } ${foil}\n`;
+          listField.value += row;
         }
       }
 
-      function printList() {
-        listField.value = ""
-        if(document.getElementById('pureTextSetting').checked && document.getElementById('puretext').value != ""){
-          puretextlist();
-        } else {
-        listField.value = cardList
-          .toString()
-          .split(/,(?=\d)/)
-          .join("\n");
+      async function puretextlist() {
+        return new Promise((resolve) => {
+          setTimeout(async () => {
+            const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+            let rowNum = 0;
+            let cards = document.getElementById("puretext").value.trim().split("\n");
+            for (const card of cards) {
+              rowNum++;
+              var details = card.split(" ");
+              var foil = details[2] === "F";
+              await getCard(details[0], details[1], rowNum, foil, 1, puretextcallback);
+              await delay(50);
+            }
+            resolve();
+          }, 2000);
+        });
       }
-    }
+
+      async function printList() {
+        listField.value = "";
+        if (
+          document.getElementById("pureTextSetting").checked &&
+          document.getElementById("puretext").value != ""
+        ) {
+          await puretextlist();
+        } else {
+          listField.value = cardList
+            .toString()
+            .split(/,(?=\d)/)
+            .join("\n");
+        }
+        if (document.getElementById("CSVOutput").checked) {
+          createcsv();
+        }
+      }
+
+      function createcsv() {
+        const cardlist = listField.value.trim();
+        const emptyField = '","';
+        const fieldEnd = '","';
+        const date = new Date().toISOString().replace("T", " ").slice(0, -1) + "650000";
+        const colTitle =
+          '"Count","Tradelist Count","Name","Edition","Condition","Language","Foil","Tags","Last Modified","Collector Number","Alter","Proxy","Purchase Price" \r\n';
+
+        let csvContent = colTitle;
+
+        for (const card of cardlist.split("\n")) {
+          const matcher = /^(\d+)\s+(.*)\s+(\(.*\))\s+(\d+)\s*(\*F\*)?/.exec(card);
+
+          if (!matcher) {
+            continue;
+          }
+
+          const quantity = matcher[1];
+          const name = matcher[2].trim();
+          const edition = matcher[3];
+          const collectorNumber = matcher[4];
+          const foil = matcher[5] ? "foil" + fieldEnd : emptyField;
+
+          const row = `"${quantity}${fieldEnd}${quantity}${fieldEnd}${name}${fieldEnd}${edition}${fieldEnd}Near Mint${fieldEnd}English${fieldEnd}${foil}${emptyField}${date}${fieldEnd}${collectorNumber}${fieldEnd}false${fieldEnd}false${fieldEnd}"\r\n`;
+          csvContent += row;
+        }
+        listField.value = csvContent;
+      }
+
+      function createColTitle() {
+        return '"Count","Tradelist Count","Name","Edition","Condition","Language","Foil","Tags","Last Modified","Collector Number","Alter","Proxy","Purchase Price" \r\n';
+      }
+
+      function downloadOutput() {
+        const link = document.createElement("a");
+        const isCSV = document.getElementById("CSVOutput").checked;
+        let content = listField.value;
+        let date = new Date().toISOString();
+        let filename = isCSV ? `file_${date}.csv` : `file_${date}.txt`;
+        let type = isCSV ? "text/csv" : "text/plain";
+        let blob = new Blob([content], { type: type });
+
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     </script>
 
-<!---------------------------------------------------------------------------------------------->
+    <!---------------------------------------------------------------------------------------------->
 
     <h1>List4Mox</h1>
     <p>
-      Welcome, this site will assist you digitize physical Magic cards for
-      import to <a href="https://www.moxfield.com">Moxfield</a>. Most cards will
-      have a Collector Number and Set Code in the bottom left corner of each
-      card. Use this information to fetch the right card with the right art. A
-      foil checkbox will appear when a card is entered. Protip: Use the "Tab"
-      key for navigating the inputfields
+      Welcome, this site will assist you digitize physical Magic cards for import to
+      <a href="https://www.moxfield.com">Moxfield</a>. Most cards will have a Collector
+      Number and Set Code in the bottom left corner of each card. Use this information to
+      fetch the right card with the right art. A foil checkbox will appear when a card is
+      entered. Protip: Use the "Tab" key for navigating the inputfields
     </p>
     <button id="showSettings" onclick="showSettings()">Settings</button>
     <div id="settings" hidden>
       <label for="fname">Default Set Code</label>
-      <input 
-      id="alwaysCode"
-      onblur="setSetcode()"
-      value=""
-      ></input>
-      <label for="fname">Lock Set Code</label><input 
-      id="codeLock"
-      onclick="locksetcode()"
-      type="checkbox"
-      ></input>
+      <input id="alwaysCode" onblur="setSetcode()" value="" />
+      <label for="fname">Lock Set Code</label>
+      <input id="codeLock" onclick="locksetcode()" type="checkbox" />
       <label>Always foil (if exists)</label>
-      <input
-        type="checkbox"
-        id="alwaysFoil"
-      />
+      <input type="checkbox" id="alwaysFoil" />
       <label>Puretext input</label>
-      <input
-        type="checkbox"
-        id="pureTextSetting"
-        onclick="showPuretext()"
-      />      
+      <input type="checkbox" id="pureTextSetting" onclick="showPuretext()" />
+      <label>CSV output</label>
+      <input type="checkbox" id="CSVOutput" />
     </div>
     <table id="cardtable">
       <thead>
@@ -302,37 +367,50 @@
       <tbody id="cardTableBody">
         <tr id="0">
           <td>
-            <input id="cn0" placeholder="example: 265" onblur="newCard(0)" />
+            <input
+              id="cn0"
+              placeholder="example: 265"
+              onblur="newCard(0)"
+              autocomplete="off"
+            />
           </td>
           <td>
-            <input id="set0" onblur="newCard(0)" placeholder="example: RVR" />
+            <input
+              id="set0"
+              onblur="newCard(0)"
+              placeholder="example: RVR"
+              autocomplete="off"
+            />
           </td>
           <td><a id="result0"></a></td>
         </tr>
         <tr id="1">
           <td>
-            <input id="cn1" onblur="newCard(1)" />
+            <input id="cn1" onblur="newCard(1)" autocomplete="off" />
           </td>
           <td>
-            <input id="set1" onblur="newCard(1)" />
+            <input id="set1" onblur="newCard(1)" autocomplete="off" />
           </td>
           <td><a id="result1"></a></td>
         </tr>
       </tbody>
     </table>
     <textarea
-        id="puretext"
-        cols="40"
-        placeholder="<- Example ->&#10;265 RVR F"
-        style="display: none;"
-      ></textarea>
+      id="puretext"
+      cols="40"
+      placeholder="<- Example ->&#10;265 RVR F"
+      style="display: none"
+      autocomplete="off"
+    ></textarea>
     <button id="generatelist" onclick="printList()">Generate List</button>
     <div>
       <textarea
         id="moxlist"
         cols="40"
+        autocomplete="off"
         placeholder="<-Your list will be generated here ->"
       ></textarea>
+      <button onclick="downloadOutput()">Download File</button>
     </div>
     <footer>
       <p>
