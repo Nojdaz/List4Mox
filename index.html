@@ -9,6 +9,9 @@
   <body onload="initilize()">
     <script>
       const ApiRoot = "https://api.scryfall.com/cards/";
+      var inputPuretext;
+      var inputTable;
+      
       var rowNum = 2;
       var cardList = [];
       var showsettings = false;
@@ -21,6 +24,34 @@
 
       function initilize() {
         listField = document.getElementById("moxlist");
+        inputTable = document.getElementById("cardTableBody");
+        inputPuretext = document.getElementById("puretext");
+        
+        if(localStorage.getItem("list")){
+          console.log(localStorage.getItem("list"))
+          convertToTable(localStorage.getItem("list"))
+        }
+      }
+
+      function save() {
+        let rowList = [];
+        if(window.getComputedStyle(inputPuretext).display === "none"){
+          localStorage.setItem("list", tableToPuretext(inputTable))
+        } else {
+          localStorage.setItem("list", inputPuretext.value)
+        }
+      }
+
+      function clearData() {
+        localStorage.clear()
+        
+        //Reset table
+        inputTable.innerHTML = "";
+        createTableRow()
+        createTableRow()
+        
+        //Reset Puretext
+        inputPuretext.value = "";
       }
 
       function showSettings() {
@@ -50,16 +81,15 @@
       }
 
       function showPuretext() {
-        var puretextField = document.getElementById("puretext");
         var cardtable = document.getElementById("cardtable");
-        if (window.getComputedStyle(puretextField).display === "none") {
-          puretextField.style.display = "block";
+        if (window.getComputedStyle(inputPuretext).display === "none") {
+          inputPuretext.style.display = "block";
           cardtable.style.display = "none";
-          convertToPureText();
+          inputPuretext.value = tableToPuretext(inputTable);
         } else {
-          puretextField.style.display = "none";
+          inputPuretext.style.display = "none";
           cardtable.style.display = "table";
-          covertToTable();
+          convertToTable(inputPuretext.value);
         }
       }
 
@@ -83,12 +113,13 @@
         const cn = document.getElementById(`cn${index}`).value.replace(/^0+/, "");
 
         if (cn != null && cn != "" && set != null && set != "") {
-          if (document.getElementById("cardTableBody").rows.length - index <= 2) {
+          if (inputTable.rows.length - index <= 2) {
             createTableRow();
           }
           isfoil = foil != null && foil != "" && foil ? true : false;
           getCard(cn, set, index, isfoil, 1, tablecallback);
         }
+        save()
       }
 
       async function getCard(cn, set, index, isfoil, qty, callback) {
@@ -162,8 +193,7 @@
         row.appendChild(setCell);
         row.appendChild(resultCell);
 
-        const table = document.getElementById("cardTableBody");
-        table.appendChild(row);
+        inputTable.appendChild(row);
         rowNum++;
       }
 
@@ -186,27 +216,24 @@
         row.appendChild(foilCell);
       }
 
-      function convertToPureText() {
-        var puretextContent = document.getElementById("puretext");
-        var table = document.getElementById("cardTableBody");
-        puretextContent.value = "";
+      function tableToPuretext(table){
+        var puretext = "";
         for (const row of table.rows) {
           const cn = row.cells[0]?.querySelector("input")?.value;
           const setcode = row.cells[1]?.querySelector("input")?.value;
           const foil = row.cells[3]?.querySelector("input")?.checked ? "F" : "";
 
           if (cn && setcode) {
-            puretextContent.value += `${cn} ${setcode} ${foil}\n`;
+            puretext += `${cn} ${setcode} ${foil}\n`;
           }
         }
+
+        return puretext;
       }
 
-      function covertToTable() {
+      function convertToTable(puretext) {
         cardList = [];
-        var puretextContent = document
-          .getElementById("puretext")
-          .value.trim()
-          .split("\n");
+        var puretextContent = puretext.trim().split("\n");
         document.getElementById("cardTableBody").innerHTML = "";
         rowNum = 0;
         puretextContent.forEach((card) => {
@@ -250,7 +277,7 @@
           setTimeout(async () => {
             const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
             let rowNum = 0;
-            let cards = document.getElementById("puretext").value.trim().split("\n");
+            let cards = inputPuretext.value.trim().split("\n");
             for (const card of cards) {
               rowNum++;
               var details = card.split(" ");
@@ -266,8 +293,7 @@
       async function printList() {
         listField.value = "";
         if (
-          document.getElementById("pureTextSetting").checked &&
-          document.getElementById("puretext").value != ""
+          document.getElementById("pureTextSetting").checked && document.getElementById("puretext") != ""
         ) {
           await puretextlist();
         } else {
@@ -344,6 +370,7 @@
     </p>
     <button id="showSettings" onclick="showSettings()">Settings</button>
     <div id="settings" hidden>
+      <button id="clearData" onclick="clearData()">Clear data</button>
       <label for="fname">Default Set Code</label>
       <input id="alwaysCode" onblur="setSetcode()" value="" />
       <label for="fname">Lock Set Code</label>
@@ -401,6 +428,7 @@
       placeholder="<- Example ->&#10;265 RVR F"
       style="display: none"
       autocomplete="off"
+      onchange="save()"
     ></textarea>
     <button id="generatelist" onclick="printList()">Generate List</button>
     <div>
