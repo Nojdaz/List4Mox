@@ -7,6 +7,24 @@
   </head>
 
   <body onload="initilize()">
+    <style>
+      .dark-mode {
+        background-color: #121212;
+        color: #ffffff;
+
+        a {
+          color: #8ab4f8;
+        }
+
+        a:hover {
+          color: #aecbfa;
+        }
+
+        a:visited {
+          color: #c58af9;
+        }
+      }
+    </style>
     <script>
       const ApiRoot = "https://api.scryfall.com/cards/";
       var inputPuretext;
@@ -23,6 +41,11 @@
       });
 
       function initilize() {
+
+        if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+          darkModeToggle()
+        }
+
         listField = document.getElementById("moxlist");
         inputTable = document.getElementById("cardTableBody");
         inputPuretext = document.getElementById("puretext");
@@ -42,7 +65,8 @@
         }
       }
 
-      function clearData() {
+      function Reset() {
+        if (confirm("This will reset the page and all data will be cleared.\nAre you sure you want to continue?")) {
         localStorage.clear()
         
         //Reset table
@@ -52,6 +76,7 @@
         
         //Reset Puretext
         inputPuretext.value = "";
+        }
       }
 
       function showSettings() {
@@ -62,6 +87,19 @@
           showsettings = true;
           document.getElementById("settings").removeAttribute("hidden");
         }
+      }
+
+      function darkModeToggle() {
+          var page = document.body;
+          page.classList.toggle("dark-mode");
+
+          var toggle = document.getElementById("darkModeToggle");
+          if(toggle.innerText == "🌙 Dark Mode"){
+              toggle.innerText = "☀️ Light Mode"
+          } else {
+            toggle.innerText = "🌙 Dark Mode"
+          } 
+
       }
 
       function setSetcode() {
@@ -370,7 +408,7 @@
     </p>
     <button id="showSettings" onclick="showSettings()">Settings</button>
     <div id="settings" hidden>
-      <button id="clearData" onclick="clearData()">Clear data</button>
+      <button id="Reset" onclick="Reset()">Reset</button>
       <label for="fname">Default Set Code</label>
       <input id="alwaysCode" onblur="setSetcode()" value="" />
       <label for="fname">Lock Set Code</label>
@@ -381,6 +419,7 @@
       <input type="checkbox" id="pureTextSetting" onclick="showPuretext()" />
       <label>CSV output</label>
       <input type="checkbox" id="CSVOutput" />
+      <button id="darkModeToggle" onclick="darkModeToggle()">🌙 Dark Mode</button>
     </div>
     <table id="cardtable">
       <thead>
